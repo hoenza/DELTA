@@ -16,6 +16,21 @@ The validated default DELTA path is:
 - page-score implementation `del3_legacy_softmax`
 - graph-enabled decode path
 
+## Supported DELTA runtime surface
+
+The public entrypoints keep the validated DELTA backend fixed. The supported
+DELTA-related CLI options are:
+
+- `--cuda_graph_decode`
+- `--enable_selective_cache`
+- `--full_cache_layers`
+- `--subset_cache_size`
+- `--compression_ratio`
+- `--L`
+
+Debug and ablation backend switches are intentionally not part of the public
+release workflow.
+
 ## Environment setup
 
 Create the supported env:

@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from DELTA.Engine.utils import setup_seed
 from reason_backend_utils import (
+    FINAL_DELTA_BACKEND_CONFIG,
     add_delta_backend_args,
     build_delta_backend_kwargs,
     delta_backend_config_fields,
@@ -233,11 +234,7 @@ def setup_configuration():
 
     parser.add_argument('--seed', type=int, default=123, help='Random seed.')
 
-    add_delta_backend_args(
-        parser,
-        include_impl_profile=True,
-        include_strict_repro=False,
-    )
+    add_delta_backend_args(parser)
     parser.add_argument('--rank_group', nargs='+', type=int, help='Target group of ranks')
     parser.add_argument('--printoutput', action='store_true', help='Whether to print sample outputs.')
 
@@ -300,19 +297,12 @@ def setup_model_and_engine(config_args):
     conditional_print(f"Setting up model and engine...")
     conditional_print(f"Using device={DEVICE}")
     conditional_print("DELTA backend configuration:")
-    conditional_print(f"  page_selector_version={config_args.page_selector_version}")
+    conditional_print("  delta_backend=final_public_release")
+    conditional_print(f"  page_selector_version={FINAL_DELTA_BACKEND_CONFIG['page_selector_version']}")
     conditional_print(f"  cuda_graph_decode={config_args.cuda_graph_decode}")
-    conditional_print(f"  cuda_graph_delta_subset_segments={not config_args.disable_cuda_graph_delta_subset_segments}")
-    conditional_print(f"  delta_fused_page_scores={not config_args.disable_delta_fused_page_scores}")
-    conditional_print(f"  delta_fixed_selector={not config_args.disable_delta_fixed_selector}")
-    conditional_print(f"  delta_fast_decode_page_info={not config_args.disable_delta_fast_decode_page_info}")
-    conditional_print(f"  delta_v2_position_bias={not config_args.disable_delta_v2_position_bias}")
-    conditional_print(f"  delta_debug_page_selection_parity={config_args.debug_delta_page_selection_parity}")
-    conditional_print(f"  delta_debug_fast_decode_page_info_parity={config_args.debug_delta_fast_decode_page_info_parity}")
-    conditional_print(f"  delta_subset_plan_reuse={not config_args.disable_delta_subset_plan_reuse}")
-    conditional_print(f"  delta_dump_buffer_dtype={config_args.delta_dump_buffer_dtype}")
-    conditional_print(f"  delta_page_score_impl={config_args.delta_page_score_impl}")
-    conditional_print(f"  delta_impl_profile={config_args.delta_impl_profile}")
+    conditional_print(f"  cuda_graph_delta_subset_segments={FINAL_DELTA_BACKEND_CONFIG['cuda_graph_delta_subset_segments']}")
+    conditional_print(f"  delta_dump_buffer_dtype={FINAL_DELTA_BACKEND_CONFIG['delta_dump_buffer_dtype']}")
+    conditional_print(f"  delta_page_score_impl={FINAL_DELTA_BACKEND_CONFIG['delta_page_score_impl']}")
     
     DTYPE = torch.bfloat16
     checkpoint_path = config_args.model
@@ -335,8 +325,8 @@ def setup_model_and_engine(config_args):
     engine.is_main_process = (not use_tp) or rank == config_args.rank_group[0]
     engine.load_model(checkpoint_path, use_tp=use_tp, rank_group=config_args.rank_group if config_args.rank_group else [0], group=global_group)
     engine.model.config.enable_selective_cache = config_args.enable_selective_cache
-    engine.model.config.page_selector_version = config_args.page_selector_version
-    engine.model.config.page_selector_v2 = config_args.page_selector_version == "v2"
+    engine.model.config.page_selector_version = FINAL_DELTA_BACKEND_CONFIG["page_selector_version"]
+    engine.model.config.page_selector_v2 = True
     if config_args.full_cache_layers is not None:
         engine.model.config.full_cache_layers = config_args.full_cache_layers
         engine.model.config.subset_cache_ratio = config_args.subset_cache_ratio
@@ -344,16 +334,10 @@ def setup_model_and_engine(config_args):
         engine.model.config.subset_cache_size = config_args.subset_cache_size
         engine.model.config.L = config_args.L
         conditional_print(f"Applied selective cache config to model: full_cache_layers={config_args.full_cache_layers}")
-        conditional_print(f"  Page selector backend: {config_args.page_selector_version}")
-        if config_args.page_selector_version == "v2":
-            conditional_print(f"  Using PageSelectorV2 (single-pass topk with exp2 scoring and position bias)")
-        else:
-            conditional_print(f"  Using PageSelector v1 (legacy prefix-topk plus last-L selector)")
+        conditional_print("  Page selector backend: v2")
+        conditional_print("  Using PageSelectorV2 (single-pass topk with exp2 scoring and position bias)")
     
     engine.throughput_mode = True
-
-    if config_args.compile:
-        engine.compile()
     
     engine.setup_caches(max_batch_size=config_args.B, max_seq_length=config_args.max_len)
     
