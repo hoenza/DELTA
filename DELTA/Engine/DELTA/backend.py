@@ -5,6 +5,7 @@ from DELTA.Engine.DELTA.page_metadata import pack_page_indices
 from DELTA.Engine.DELTA.page_score import compute_page_scores_triton
 from DELTA.Engine.DELTA.page_selector import PageSelector
 from DELTA.Engine.DELTA.page_selector_v2 import PageSelectorV2
+from DELTA.Engine.DELTA.public_config import FINAL_PUBLIC_DELTA_BACKEND_CONFIG
 from DELTA.Engine.utils import load_model_DELTA
 from DELTA.Engine.DELTA.Timer import Timer
 import flashinfer, sys, math
@@ -32,18 +33,18 @@ class LMBackend:
         dec_len: int = 1,
         draft_dec_len: int = None,
         cuda_graph_decode: bool = False,
-        cuda_graph_delta_subset_segments: bool = True,
-        delta_impl_profile: bool = False,
-        delta_fused_page_scores: bool = True,
-        delta_fixed_selector: bool = True,
-        delta_fast_decode_page_info: bool = True,
-        delta_v2_position_bias: bool = True,
+        cuda_graph_delta_subset_segments: bool = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["cuda_graph_delta_subset_segments"],
+        delta_impl_profile: bool = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["delta_impl_profile"],
+        delta_fused_page_scores: bool = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["delta_fused_page_scores"],
+        delta_fixed_selector: bool = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["delta_fixed_selector"],
+        delta_fast_decode_page_info: bool = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["delta_fast_decode_page_info"],
+        delta_v2_position_bias: bool = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["delta_v2_position_bias"],
         delta_debug_page_selection_parity: bool = False,
         delta_debug_fast_decode_page_info_parity: bool = False,
-        delta_subset_plan_reuse: bool = True,
-        delta_dump_buffer_dtype: str = "fp32",
-        delta_page_score_impl: str = "del3_legacy_softmax",
-        page_selector_version: str = "v2",
+        delta_subset_plan_reuse: bool = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["delta_subset_plan_reuse"],
+        delta_dump_buffer_dtype: str = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["delta_dump_buffer_dtype"],
+        delta_page_score_impl: str = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["delta_page_score_impl"],
+        page_selector_version: str = FINAL_PUBLIC_DELTA_BACKEND_CONFIG["page_selector_version"],
     ) -> None:
         page_selector_version = str(page_selector_version).lower()
         if page_selector_version not in {"v1", "v2"}:

@@ -1,18 +1,8 @@
 from __future__ import annotations
 
+from DELTA.Engine.DELTA.public_config import FINAL_PUBLIC_DELTA_BACKEND_CONFIG
 
-FINAL_DELTA_BACKEND_CONFIG = {
-    "page_selector_version": "v2",
-    "delta_dump_buffer_dtype": "fp32",
-    "delta_page_score_impl": "del3_legacy_softmax",
-    "cuda_graph_delta_subset_segments": True,
-    "delta_fused_page_scores": True,
-    "delta_fixed_selector": True,
-    "delta_fast_decode_page_info": True,
-    "delta_v2_position_bias": True,
-    "delta_subset_plan_reuse": True,
-    "delta_impl_profile": False,
-}
+FINAL_DELTA_BACKEND_CONFIG = dict(FINAL_PUBLIC_DELTA_BACKEND_CONFIG)
 
 
 def add_delta_backend_args(parser, **_unused):
